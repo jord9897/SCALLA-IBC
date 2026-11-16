@@ -3,10 +3,9 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="Gestão de Cultos e Escalas", page_icon="musica", layout="wide"
+    page_title="Gestão de Cultos e Escalas", page_icon="🎵", layout="wide"
 )
 
-# Inicializar banco de dados simples na sessão (para testes locais)
 if "disponibilidades" not in st.session_state:
   st.session_state.disponibilidades = pd.DataFrame(
       columns=["Nome", "Instrumento/Função", "Data", "Observação"]
@@ -21,7 +20,6 @@ st.write(
     " repertório e escalas."
 )
 
-# Menu lateral de navegação
 menu = st.sidebar.selectbox(
     "Menu",
     [
@@ -31,9 +29,6 @@ menu = st.sidebar.selectbox(
     ],
 )
 
-# ---------------------------------------------------------
-# 1. ENVIAR DISPONIBILIDADE (Para os músicos/voluntários)
-# ---------------------------------------------------------
 if menu == "📝 Enviar Disponibilidade":
   st.subheader("Informe sua Disponibilidade para os Próximos Cultos")
 
@@ -74,9 +69,6 @@ if menu == "📝 Enviar Disponibilidade":
             f"Obrigado, {nome}! Sua disponibilidade foi registrada com sucesso."
         )
 
-# ---------------------------------------------------------
-# 2. PAINEL DO LÍDER (Gerenciar e gerar escala)
-# ---------------------------------------------------------
 elif menu == "⚙️ Painel do Líder (Escalas)":
   st.subheader("Painel de Controle - Disponibilidades Recebidas")
 
@@ -93,9 +85,6 @@ elif menu == "⚙️ Painel do Líder (Escalas)":
       )
       st.rerun()
 
-# ---------------------------------------------------------
-# 3. ORDEM DE CULTO & REPERTÓRIO
-# ---------------------------------------------------------
 elif menu == "🎼 Ordem de Culto & Repertório":
   st.subheader("Montagem da Liturgia e Repertório")
 
