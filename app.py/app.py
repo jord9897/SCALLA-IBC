@@ -2,10 +2,26 @@ import datetime
 import pandas as pd
 import streamlit as st
 
+# Configuração da página com layout largo e ícone moderno
 st.set_page_config(
-    page_title="Gestão de Cultos e Escalas", page_icon="🎵", layout="wide"
+    page_title="SCALLA - Gestão de Cultos", page_icon="🎵", layout="wide"
 )
 
+# Estilo visual moderno com CSS customizado (deixa os botões e caixas mais bonitos)
+st.markdown("""
+    <style>
+    .main {
+        background-color: #0e1117;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Banco de dados temporário na sessão
 if "disponibilidades" not in st.session_state:
   st.session_state.disponibilidades = pd.DataFrame(
       columns=["Nome", "Instrumento/Função", "Data", "Observação"]
@@ -14,49 +30,55 @@ if "disponibilidades" not in st.session_state:
 if "cultos" not in st.session_state:
   st.session_state.cultos = {}
 
-st.title("🎵 Gerenciamento de Cultos & Escalas")
-st.write(
-    "Plataforma centralizada para envio de disponibilidades, montagem de"
-    " repertório e escalas."
-)
+# Título Principal do App
+st.title("🎵 SCALLA - Gestão de Cultos & Escalas")
+st.markdown("Plataforma oficial da base de adoração para alinhamento e escalas.")
+st.markdown("---")
 
-menu = st.sidebar.selectbox(
-    "Menu",
-    [
-        "📝 Enviar Disponibilidade",
-        "⚙️ Painel do Líder (Escalas)",
-        "🎼 Ordem de Culto & Repertório",
-    ],
-)
+# Abas Modernas no Topo (substitui a setinha lateral)
+aba1, aba2, aba3 = st.tabs([
+    "📝 Enviar Disponibilidade", 
+    "⚙️ Painel do Líder", 
+    "🎼 Ordem & Repertório"
+])
 
-if menu == "📝 Enviar Disponibilidade":
-  st.subheader("Informe sua Disponibilidade para os Próximos Cultos")
+# ---------------------------------------------------------
+# 1. ENVIAR DISPONIBILIDADE
+# ---------------------------------------------------------
+with aba1:
+  st.subheader("Informe sua Disponibilidade")
+  st.write("Preencha os campos abaixo para informar em quais cultos você poderá servir.")
 
-  with st.form("form_disponibilidade"):
-    nome = st.text_input("Seu Nome Completo")
-    instrumento = st.selectbox(
-        "Instrumento / Função",
-        [
-            "Violão",
-            "Guitarra",
-            "Baixo",
-            "Bateria",
-            "Teclado",
-            "Vocal / Backing",
-            "Multimídia / Projeção",
-            "Recepção / Áudio",
-        ],
-    )
-    data_culto = st.date_input(
-        "Data do Culto", min_value=datetime.date.today()
-    )
-    obs = st.text_area("Observação (ex: Posso apenas no culto da noite)")
+  with st.form("form_disponibilidade", clear_on_submit=True):
+    col1, col2 = st.columns(2)
+    
+    with col1:
+      nome = st.text_input("Seu Nome Completo")
+      instrumento = st.selectbox(
+          "Instrumento / Função",
+          [
+              "Violão",
+              "Guitarra",
+              "Baixo",
+              "Bateria",
+              "Teclado",
+              "Vocal / Backing",
+              "Multimídia / Projeção",
+              "Recepção / Áudio",
+          ],
+      )
+    
+    with col2:
+      data_culto = st.date_input(
+          "Data do Culto", min_value=datetime.date.today()
+      )
+      obs = st.text_area("Observação (ex: Posso apenas no culto da noite)")
 
-    enviado = st.form_submit_button("Enviar Disponibilidade")
+    enviado = st.form_submit_button("Enviar Minha Disponibilidade 🚀")
 
     if enviado:
       if nome.strip() == "":
-        st.warning("Por favor, preencha o seu nome.")
+        st.warning("Por favor, preencha o seu nome antes de enviar.")
       else:
         nova_linha = pd.DataFrame(
             [[nome, instrumento, data_culto, obs]],
@@ -69,29 +91,79 @@ if menu == "📝 Enviar Disponibilidade":
             f"Obrigado, {nome}! Sua disponibilidade foi registrada com sucesso."
         )
 
-elif menu == "⚙️ Painel do Líder (Escalas)":
-  st.subheader("Painel de Controle - Disponibilidades Recebidas")
+# ---------------------------------------------------------
+# 2. PAINEL DO LÍDER (Com senha de proteção)
+# ---------------------------------------------------------
+with aba2:
+  st.subheader("Painel de Controle Exclusivo do Líder")
+  
+  # Sistema simples de senha para proteger o painel
+  senha_digitada = st.text_input("Digite a senha do líder para acessar:", type="password")
+  
+  # Defina a sua senha aqui (ex: "scalla2026")
+  SENHA_MESTRE = "scalla2026" 
 
-  df = st.session_state.disponibilidades
+  if senha_digitada == SENHA_MESTRE:
+    st.success("Acesso autorizado, líder! 🔓")
+    
+    df = st.session_state.disponibilidades
 
-  if df.empty:
-    st.info("Ainda não há disponibilidades cadastradas.")
-  else:
-    st.dataframe(df, use_container_width=True)
+    if df.empty:
+      st.info("Ainda não há disponibilidades cadastradas pela equipe.")
+    else:
+      st.markdown("### 📋 Respostas Recebidas")
+      st.dataframe(df, use_container_width=True)
 
-    if st.button("Limpar Todos os Registros"):
-      st.session_state.disponibilidades = pd.DataFrame(
-          columns=["Nome", "Instrumento/Função", "Data", "Observação"]
+      st.markdown("---")
+      st.markdown("### 📱 Gerar Escala para o WhatsApp")
+
+      df["Data_Str"] = pd.to_datetime(df["Data"]).dt.strftime("%d/%m/%Y")
+      datas_disponiveis = df["Data_Str"].unique()
+
+      data_escolhida = st.selectbox(
+          "Selecione a data do culto",
+          datas_disponiveis,
       )
-      st.rerun()
 
-elif menu == "🎼 Ordem de Culto & Repertório":
+      df_filtrado = df[df["Data_Str"] == data_escolhida]
+
+      texto_whatsapp = f"*ESCALA DE CULTO - {data_escolhida}* 🎵\n\n"
+      texto_whatsapp += "Olá equipe! Segue a nossa escala confirmada para este domingo:\n\n"
+
+      for _, row in df_filtrado.iterrows():
+        texto_whatsapp += f"▪ *{row['Instrumento/Função']}:* {row['Nome']}\n"
+        if pd.notna(row["Observação"]) and row["Observação"].strip() != "":
+          texto_whatsapp += f"  *(Obs: {row['Observação']})*\n"
+
+      texto_whatsapp += "\nDeus abençoe a todos! 🙏"
+
+      st.text_area(
+          "Copie o texto abaixo e cole no grupo do WhatsApp:",
+          value=texto_whatsapp,
+          height=200,
+      )
+
+      st.markdown("---")
+      if st.button("Limpar Todos os Registros de Disponibilidade"):
+        st.session_state.disponibilidades = pd.DataFrame(
+            columns=["Nome", "Instrumento/Função", "Data", "Observação"]
+        )
+        st.rerun()
+  elif senha_digitada != "":
+    st.error("Senha incorreta. Apenas o líder tem acesso a este painel.")
+  else:
+    st.info("Digite a senha acima para visualizar as disponibilidades da equipe.")
+
+# ---------------------------------------------------------
+# 3. ORDEM DE CULTO & REPERTÓRIO
+# ---------------------------------------------------------
+with aba3:
   st.subheader("Montagem da Liturgia e Repertório")
 
   data_selecionada = st.date_input(
-      "Selecione a data do culto",
+      "Selecione a data do culto para montar o repertório",
       min_value=datetime.date.today(),
-      key="data_culto",
+      key="data_culto_rep",
   )
 
   data_str = str(data_selecionada)
@@ -107,22 +179,4 @@ elif menu == "🎼 Ordem de Culto & Repertório":
   with st.form("form_culto"):
     ordem_culto = st.text_area(
         "Ordem do Culto (Passo a passo)",
-        value=culto_atual["ordem"],
-        height=150,
-    )
-    repertorio_culto = st.text_area(
-        "Repertório de Louvor (Músicas e Tons)",
-        value=culto_atual["repertorio"],
-        height=150,
-    )
-
-    salvar_culto = st.form_submit_button("Salvar Culto e Repertório")
-
-    if salvar_culto:
-      st.session_state.cultos[data_str] = {
-          "ordem": ordem_culto,
-          "repertorio": repertorio_culto,
-      }
-      st.success(
-          f"Ordem e repertório salvos com sucesso para a data {data_str}!"
-      )
+    ...
