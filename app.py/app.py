@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="SCALLA - Gestão de Cultos", page_icon="🎵", layout="wide"
 )
 
-# Estilo visual moderno com CSS customizado (deixa os botões e caixas mais bonitos)
+# Estilo visual moderno com CSS customizado
 st.markdown("""
     <style>
     .main {
@@ -35,7 +35,7 @@ st.title("🎵 SCALLA - Gestão de Cultos & Escalas")
 st.markdown("Plataforma oficial da base de adoração para alinhamento e escalas.")
 st.markdown("---")
 
-# Abas Modernas no Topo (substitui a setinha lateral)
+# Abas Modernas no Topo
 aba1, aba2, aba3 = st.tabs([
     "📝 Enviar Disponibilidade", 
     "⚙️ Painel do Líder", 
@@ -97,10 +97,9 @@ with aba1:
 with aba2:
   st.subheader("Painel de Controle Exclusivo do Líder")
   
-  # Sistema simples de senha para proteger o painel
   senha_digitada = st.text_input("Digite a senha do líder para acessar:", type="password")
   
-  # Defina a sua senha aqui (ex: "scalla2026")
+  # Defina a sua senha aqui
   SENHA_MESTRE = "scalla2026" 
 
   if senha_digitada == SENHA_MESTRE:
@@ -179,4 +178,22 @@ with aba3:
   with st.form("form_culto"):
     ordem_culto = st.text_area(
         "Ordem do Culto (Passo a passo)",
-    ...
+        value=culto_atual["ordem"],
+        height=150,
+    )
+    repertorio_culto = st.text_area(
+        "Repertório de Louvor (Músicas e Tons)",
+        value=culto_atual["repertorio"],
+        height=150,
+    )
+
+    salvar_culto = st.form_submit_button("Salvar Culto e Repertório")
+
+    if salvar_culto:
+      st.session_state.cultos[data_str] = {
+          "ordem": ordem_culto,
+          "repertorio": repertorio_culto,
+      }
+      st.success(
+          f"Ordem e repertório salvos com sucesso para a data {data_str}!"
+      )
